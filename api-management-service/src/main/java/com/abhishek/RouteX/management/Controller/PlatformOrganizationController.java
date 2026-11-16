@@ -2,7 +2,9 @@ package com.abhishek.RouteX.management.Controller;
 
 import com.abhishek.RouteX.management.Dto.requestDto.OrganizationRequest;
 import com.abhishek.RouteX.management.Dto.requestDto.OrganizationStatusRequest;
+import com.abhishek.RouteX.management.Dto.requestDto.TenantAdminRequest;
 import com.abhishek.RouteX.management.Dto.responseDto.OrganizationResponse;
+import com.abhishek.RouteX.management.Dto.responseDto.TenantAdminResponse;
 import com.abhishek.RouteX.management.Service.OrganizationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,7 +22,7 @@ public class PlatformOrganizationController {
         this.organizationService = organizationService;
     }
 
-    // CRUD operations
+    // CRUD operations for PLATFORM_ADMIN
 
     // 1- Create
     @PostMapping
@@ -66,4 +68,43 @@ public class PlatformOrganizationController {
         organizationService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+
+    // CRUD operations for TENANT_ADMINS
+
+    @PostMapping("/{organizationId}/tenant-admin")
+    public ResponseEntity<TenantAdminResponse> createTenantAdmin(
+            @PathVariable Long organizationId,
+            @Valid @RequestBody TenantAdminRequest request) {
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(organizationService.createTenantAdmin(organizationId, request));
+    }
+
+    @GetMapping("/{organizationId}/tenant-admin")
+    public ResponseEntity<TenantAdminResponse> getTenantAdmin(
+            @PathVariable Long organizationId) {
+
+        return ResponseEntity.ok(
+                organizationService.getTenantAdmin(organizationId));
+    }
+
+    @PutMapping("/{organizationId}/tenant-admin")
+    public ResponseEntity<TenantAdminResponse> updateTenantAdmin(
+            @PathVariable Long organizationId,
+            @Valid @RequestBody TenantAdminRequest request) {
+
+        return ResponseEntity.ok(
+                organizationService.updateTenantAdmin(organizationId, request));
+    }
+
+    @DeleteMapping("/{organizationId}/tenant-admin")
+    public ResponseEntity<Void> deleteTenantAdmin(
+            @PathVariable Long organizationId) {
+
+        organizationService.deleteTenantAdmin(organizationId);
+
+        return ResponseEntity.noContent().build();
+    }
+
 }
