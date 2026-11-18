@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/platform/organization")
+@RequestMapping("/api/platform/organizations")
 public class PlatformOrganizationController {
     private OrganizationService organizationService;
 

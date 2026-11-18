@@ -26,31 +26,35 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http.csrf(csrf -> csrf.disable())
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                .sessionManagement(
+                        session -> session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/health", "/api/auth/login").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/styles.css",
+                                "/app.js",
+                                "/favicon.ico",
+                                "/health",
+                                "/api/auth/login").permitAll()
                         .requestMatchers("/api/platform/**")
                         .hasRole("PLATFORM_ADMIN")
-
                         .requestMatchers("/api/tenant/**")
                         .hasRole("TENANT_ADMIN")
-
                         .requestMatchers("/api/gateway/**")
                         .hasRole("GATEWAY_SERVICE")
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(resourceServer ->
-                        resourceServer.jwt(jwt ->
-                                jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
-                        )
-                );
+                .oauth2ResourceServer(
+                        resourceServer -> resourceServer.jwt(
+                                jwt -> jwt.jwtAuthenticationConverter(
+                                        jwtAuthenticationConverter())));
 
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder(){

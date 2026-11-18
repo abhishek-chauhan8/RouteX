@@ -3,6 +3,7 @@ package com.abhishek.RouteX.management.Service;
 import com.abhishek.RouteX.management.Dto.requestDto.OrganizationRequest;
 import com.abhishek.RouteX.management.Dto.requestDto.OrganizationStatusRequest;
 import com.abhishek.RouteX.management.Dto.requestDto.TenantAdminRequest;
+import com.abhishek.RouteX.management.Dto.requestDto.TenantOrganizationRequest;
 import com.abhishek.RouteX.management.Dto.responseDto.OrganizationResponse;
 import com.abhishek.RouteX.management.Dto.responseDto.TenantAdminResponse;
 import com.abhishek.RouteX.management.Entity.ManagementUsers;
@@ -29,17 +30,24 @@ public class OrganizationService {
     private final ManagementUserRepository managementUserRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TenantContext tenantContext;
+    private final AuditService auditService;
 
     public OrganizationService(OrganizationRepository organizationRepository,
                                ManagementUserRepository managementUserRepository,
                                RoleRepository roleRepository,
-                               PasswordEncoder passwordEncoder) {
+                               PasswordEncoder passwordEncoder,
+                               TenantContext tenantContext,
+                               AuditService auditService) {
         this.organizationRepository = organizationRepository;
         this.managementUserRepository = managementUserRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tenantContext = tenantContext;
+        this.auditService =  auditService;
     }
 
+    // <--- Methods for PlatformOrganizationController --->
 
     @Transactional
     public OrganizationResponse  create(OrganizationRequest request){
@@ -57,9 +65,10 @@ public class OrganizationService {
         organizationRepository.save(organization);
 
         // This is a AuditService layer which audit/store every action performed
-//        auditService.record(organization, "CREATE_ORGANIZATION", "ORGANIZATION",
-//                organization.getId().toString(), startedAt,
-//                "Organization creation is in PENDING state");
+
+        auditService.record(organization, "CREATE_ORGANIZATION", "ORGANIZATION",
+                organization.getId().toString(), startedAt,
+                "Organization creation is in PENDING state");
 
         return OrganizationResponse.from(organization);
     }
@@ -90,6 +99,10 @@ public class OrganizationService {
         organization.setSlug(request.getSlug());
         organization.setUpdatedAt(LocalDateTime.now());
 
+        auditService.record(organization, "UPDATE_ORGANIZATION", "ORGANIZATION",
+                organization.getId().toString(), startedAt,
+                "Organization name and slug updated");
+
         return OrganizationResponse.from(organization);
     }
 
@@ -111,6 +124,10 @@ public class OrganizationService {
         organization.setStatus(request.getStatus());
         organization.setUpdatedAt(LocalDateTime.now());
 
+        auditService.record(organization, "CHANGE_ORGANIZATION_STATUS", "ORGANIZATION",
+                organization.getId().toString(), startedAt,
+                "STATUS changed to : " + request.getStatus());
+
         return OrganizationResponse.from(organization);
     }
 
@@ -122,8 +139,14 @@ public class OrganizationService {
         organization.setStatus(OrganizationStatus.DELETED);
         organization.setDeletedAt(LocalDateTime.now());
         organization.setUpdatedAt(LocalDateTime.now());
+
+        auditService.record(organization, "DELETE_ORGANIZATION", "ORGANIZATION",
+                organization.getId().toString(), startedAt,
+                "Organization soft-deleted");
     }
 
+
+    // <--- Tenant Admin CRUD operations --->
 
     @Transactional
     public TenantAdminResponse createTenantAdmin(Long organizationId,
@@ -199,7 +222,35 @@ public class OrganizationService {
         managementUserRepository.delete(users);
     }
 
-    // Supportive functions
+    // <--- Methods for PlatformOrganizationController --->
+
+    @Transactional(readOnly = true)
+    public OrganizationResponse getOwnOrganization(){
+        return OrganizationResponse.from(tenantContext.getOrganization());
+    }
+
+    @Transactional
+    public OrganizationResponse updateOwnOrganization(TenantOrganizationRequest request){
+        long startedAt = System.nanoTime();
+
+        Organization organization = tenantContext.getOrganization();
+
+        // Allow name changes only if the new name is not already used by another organization.
+        if(!organization.getName().equalsIgnoreCase(request.getName())
+                && organizationRepository.existsByNameIgnoreCase(request.getName())) {
+
+            throw new ApiException(HttpStatus.CONFLICT, "Tenant name is already exists");
+        }
+
+        organization.setName(request.getName());
+        organization.setUpdatedAt(LocalDateTime.now());
+
+        return OrganizationResponse.from(organization);
+    }
+
+
+
+    // <--- Supportive functions --->
 
     public ManagementUsers getTenantAdminEntity(Long organizationId) {
 
