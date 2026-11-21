@@ -11,7 +11,7 @@ public class LoginResponse {
 
     private String token;
     private String tokenType;
-    private Long expiresInSecond;
+    private Long expiresInSeconds;
     private String role;
     private Long organizationId;
 

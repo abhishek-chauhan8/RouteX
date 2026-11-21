@@ -1,6 +1,5 @@
-package com.abhishek.RouteX.smart_gateway_service.Dto.responseDto;
+package com.abhishek.RouteX.smart_gateway_service.Dto1.responseDto;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 

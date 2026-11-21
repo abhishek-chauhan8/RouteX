@@ -1,6 +1,6 @@
 package com.abhishek.RouteX.smart_gateway_service.Controller;
 
-import com.abhishek.RouteX.smart_gateway_service.Dto.responseDto.HealthResponse;
+import com.abhishek.RouteX.smart_gateway_service.Dto1.responseDto.HealthResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
