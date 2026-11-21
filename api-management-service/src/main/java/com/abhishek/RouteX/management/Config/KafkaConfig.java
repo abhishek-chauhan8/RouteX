@@ -11,6 +11,10 @@ public class KafkaConfig {
     @Bean
     public NewTopic gatewayConfigurationTopic(
             @Value("${gateway.kafka.configuration.topic}") String topic){
-        return TopicBuilder.name(topic).partitions(1).replicas(1);
+        return TopicBuilder
+                .name(topic)
+                .partitions(1)
+                .replicas(1)
+                .build();
     }
 }
