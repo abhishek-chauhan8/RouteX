@@ -10,6 +10,7 @@ import com.abhishek.RouteX.management.Entity.ManagementUsers;
 import com.abhishek.RouteX.management.Entity.Organization;
 import com.abhishek.RouteX.management.Entity.OrganizationStatus;
 import com.abhishek.RouteX.management.Entity.Role;
+import com.abhishek.RouteX.management.Events.GatewayConfigurationEventService;
 import com.abhishek.RouteX.management.Exception.ApiException;
 import com.abhishek.RouteX.management.Repository.ManagementUserRepository;
 import com.abhishek.RouteX.management.Repository.OrganizationRepository;
@@ -32,12 +33,14 @@ public class OrganizationService {
     private final PasswordEncoder passwordEncoder;
     private final TenantContext tenantContext;
     private final AuditService auditService;
+    private final GatewayConfigurationEventService eventService;
 
     public OrganizationService(OrganizationRepository organizationRepository,
                                ManagementUserRepository managementUserRepository,
                                RoleRepository roleRepository,
                                PasswordEncoder passwordEncoder,
                                TenantContext tenantContext,
+                               GatewayConfigurationEventService eventService,
                                AuditService auditService) {
         this.organizationRepository = organizationRepository;
         this.managementUserRepository = managementUserRepository;
@@ -45,6 +48,7 @@ public class OrganizationService {
         this.passwordEncoder = passwordEncoder;
         this.tenantContext = tenantContext;
         this.auditService =  auditService;
+        this.eventService = eventService;
     }
 
     // <--- Methods for PlatformOrganizationController --->
@@ -69,6 +73,8 @@ public class OrganizationService {
         auditService.record(organization, "CREATE_ORGANIZATION", "ORGANIZATION",
                 organization.getId().toString(), startedAt,
                 "Organization creation is in PENDING state");
+
+
 
         return OrganizationResponse.from(organization);
     }
@@ -103,6 +109,9 @@ public class OrganizationService {
                 organization.getId().toString(), startedAt,
                 "Organization name and slug updated");
 
+        eventService.publish("ORGANIZATION_UPDATED",
+                organization.getId(), null, null);
+
         return OrganizationResponse.from(organization);
     }
 
@@ -128,6 +137,9 @@ public class OrganizationService {
                 organization.getId().toString(), startedAt,
                 "STATUS changed to : " + request.getStatus());
 
+        eventService.publish("STATUS_CHANGED" + request.getStatus(),
+                organization.getId(), null, null);
+
         return OrganizationResponse.from(organization);
     }
 
@@ -143,6 +155,9 @@ public class OrganizationService {
         auditService.record(organization, "DELETE_ORGANIZATION", "ORGANIZATION",
                 organization.getId().toString(), startedAt,
                 "Organization soft-deleted");
+
+        eventService.publish("ORGANIZATION_DELETED",
+                organization.getId(), null, null);
     }
 
 
