@@ -12,9 +12,11 @@ import java.util.List;
 public class GatewayConfigurationLoader implements ApplicationRunner {
 
     private final ManagementApiClient client;
+    private final RouteRegistry registry;
 
-    public GatewayConfigurationLoader(ManagementApiClient client) {
+    public GatewayConfigurationLoader(ManagementApiClient client, RouteRegistry registry) {
         this.client = client;
+        this.registry = registry;
     }
 
     @Override
@@ -24,9 +26,6 @@ public class GatewayConfigurationLoader implements ApplicationRunner {
 
     public void refresh(){
         List<GatewayRoute> routes = client.fetchActiveRoutes();
-
-        for(GatewayRoute  route : routes){
-            System.out.println("Route : " + route.getTargetPathPrefix());
-        }
+        registry.replaceAll(routes);
     }
 }
